@@ -27,34 +27,38 @@
         const database = getDatabase(app);
 
         // Globale Funktionen definieren
-        window.addItem = function() {
-            const imageFile = document.getElementById("imageInput").files[0];
+        window.addItems = function() {
+            const imageFiles = document.getElementById("imageInput").files;
             const customName = document.getElementById("nameInput").value.trim();
 
-            if (!imageFile) {
-                alert("Bitte wähle ein Bild aus!");
+            if (imageFiles.length === 0) {
+                alert("Bitte wähle mindestens ein Bild aus!");
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                // Wenn kein Name eingegeben wurde, verwende Datum/Uhrzeit
-                const name = customName || new Date().toLocaleString('de-DE');
-                
-                const newItem = {
-                    name: name,
-                    image: e.target.result
-                };
+            Array.from(imageFiles).forEach((imageFile, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const name = customName || `Bild ${index + 1} - ${new Date().toLocaleString('de-DE')}`;
+                    
+                    const newItem = {
+                        name: name,
+                        image: e.target.result
+                    };
 
-                // In Firebase speichern
-                push(ref(database, 'items'), newItem);
-                closeModal();
-            };
-            reader.readAsDataURL(imageFile);
+                    // In Firebase speichern
+                    push(ref(database, 'items'), newItem);
+                };
+                reader.readAsDataURL(imageFile);
+            });
+
+            closeModal();
         };
 
         window.deleteItem = function(id) {
-            remove(ref(database, 'items/' + id));
+            remove(ref(database, 'items/' + id)).then(() => {
+                updateGallery(); // Galerie nach dem Löschen aktualisieren
+            });
         };
 
         // Gallery updaten
@@ -103,7 +107,7 @@
         window.closeModal = function() {
             document.getElementById("uploadModal").style.display = "none";
             document.getElementById("imageInput").value = "";
-            document.getElementById("nameInput").value = ""; // Namensfeld zurücksetzen
+            document.getElementById("nameInput").value = "";
         };
     </script>
     <style>
@@ -331,9 +335,9 @@
                     🖼️ Aus Galerie wählen
                 </button>
             </div>
-            <input type="file" id="imageInput" accept="image/*" style="display: none">
+            <input type="file" id="imageInput" accept="image/*" multiple style="display: none">
             <input type="text" id="nameInput" placeholder="Produktname (optional)" class="name-input"><br><br>
-            <button onclick="addItem()">Hinzufügen</button>
+            <button onclick="addItems()">Hinzufügen</button>
             <button onclick="closeModal()">Abbrechen</button>
         </div>
     </div>
