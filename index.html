@@ -167,6 +167,36 @@
             background: #f1f1f1;
             color: #333;
         }
+
+        .upload-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .camera-btn, .gallery-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .camera-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .gallery-btn {
+            background: #764ba2;
+            color: white;
+        }
+
+        .camera-btn:active, .gallery-btn:active {
+            transform: scale(0.98);
+        }
     </style>
 </head>
 <body>
@@ -182,7 +212,15 @@
     <div id="uploadModal" class="modal">
         <div class="modal-content">
             <h2>Neues Produkt hinzufügen</h2>
-            <input type="file" id="imageInput" accept="image/*" capture="camera"><br><br>
+            <div class="upload-buttons">
+                <button onclick="takePicture()" class="camera-btn">
+                    📸 Foto aufnehmen
+                </button>
+                <button onclick="choosePicture()" class="gallery-btn">
+                    🖼️ Aus Galerie wählen
+                </button>
+            </div>
+            <input type="file" id="imageInput" accept="image/*" style="display: none">
             <input type="text" id="nameInput" placeholder="Produktname"><br><br>
             <button onclick="addItem()">Hinzufügen</button>
             <button onclick="closeModal()">Abbrechen</button>
@@ -266,6 +304,18 @@
             items = items.filter(item => item.name !== name);
             localStorage.setItem('lebensmittelListe', JSON.stringify(items));
             updateGallery(searchInput.value);
+        }
+
+        function takePicture() {
+            const input = document.getElementById('imageInput');
+            input.setAttribute('capture', 'environment');
+            input.click();
+        }
+
+        function choosePicture() {
+            const input = document.getElementById('imageInput');
+            input.removeAttribute('capture');
+            input.click();
         }
     </script>
 </body>
