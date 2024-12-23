@@ -47,12 +47,15 @@
                     };
 
                     // In Firebase speichern
-                    push(ref(database, 'items'), newItem);
+                    push(ref(database, 'items'), newItem).then(() => {
+                        if (index === imageFiles.length - 1) {
+                            closeModal();
+                            updateGallery(); // Galerie nach dem Hinzufügen aktualisieren
+                        }
+                    });
                 };
                 reader.readAsDataURL(imageFile);
             });
-
-            closeModal();
         };
 
         window.deleteItem = function(id) {
