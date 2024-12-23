@@ -29,17 +29,18 @@
         // Globale Funktionen definieren
         window.addItem = function() {
             const imageFile = document.getElementById("imageInput").files[0];
+            const customName = document.getElementById("nameInput").value.trim();
 
             if (!imageFile) {
                 alert("Bitte wähle ein Bild aus!");
                 return;
             }
 
-            const now = new Date();
-            const name = now.toLocaleString('de-DE');
-
             const reader = new FileReader();
             reader.onload = function(e) {
+                // Wenn kein Name eingegeben wurde, verwende Datum/Uhrzeit
+                const name = customName || new Date().toLocaleString('de-DE');
+                
                 const newItem = {
                     name: name,
                     image: e.target.result
@@ -97,6 +98,13 @@
 
         // Make updateGallery global
         window.updateGallery = updateGallery;
+
+        // Erweitere closeModal um das Namensfeld zurückzusetzen
+        window.closeModal = function() {
+            document.getElementById("uploadModal").style.display = "none";
+            document.getElementById("imageInput").value = "";
+            document.getElementById("nameInput").value = ""; // Namensfeld zurücksetzen
+        };
     </script>
     <style>
         * {
@@ -291,6 +299,15 @@
         .camera-btn:active, .gallery-btn:active {
             transform: scale(0.98);
         }
+
+        .name-input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -315,6 +332,7 @@
                 </button>
             </div>
             <input type="file" id="imageInput" accept="image/*" style="display: none">
+            <input type="text" id="nameInput" placeholder="Produktname (optional)" class="name-input"><br><br>
             <button onclick="addItem()">Hinzufügen</button>
             <button onclick="closeModal()">Abbrechen</button>
         </div>
@@ -324,11 +342,6 @@
         // Deine bisherigen Modal-Funktionen
         function openModal() {
             document.getElementById("uploadModal").style.display = "block";
-        }
-
-        function closeModal() {
-            document.getElementById("uploadModal").style.display = "none";
-            document.getElementById("imageInput").value = "";
         }
 
         function takePicture() {
