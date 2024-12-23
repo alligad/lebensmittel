@@ -4,6 +4,100 @@
     <title>Hebers Lebensmittel</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Füge die Firebase SDK imports hinzu -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Deine Firebase Konfiguration - ERSETZE DIES mit deiner Konfiguration
+        const firebaseConfig = {
+            // Füge hier deinen Firebase-Konfigurationscode ein
+            apiKey: "AIzaSyBuWfCDQf202IOTKNaIemxmaZW2skVPZA8",
+            authDomain: "lebensmittel-b69c0.firebaseapp.com",
+            databaseURL: "https://lebensmittel-b69c0-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "lebensmittel-b69c0",
+            storageBucket: "lebensmittel-b69c0.firebasestorage.app",
+            messagingSenderId: "759543353904",
+            appId: "1:759543353904:web:5a011248d6deaec66bd3f5",
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Globale Funktionen definieren
+        window.addItem = function() {
+            const imageFile = document.getElementById("imageInput").files[0];
+
+            if (!imageFile) {
+                alert("Bitte wähle ein Bild aus!");
+                return;
+            }
+
+            const now = new Date();
+            const name = now.toLocaleString('de-DE');
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const newItem = {
+                    name: name,
+                    image: e.target.result
+                };
+
+                // In Firebase speichern
+                push(ref(database, 'items'), newItem);
+                closeModal();
+            };
+            reader.readAsDataURL(imageFile);
+        };
+
+        window.deleteItem = function(id) {
+            remove(ref(database, 'items/' + id));
+        };
+
+        // Gallery updaten
+        function updateGallery(filter = "") {
+            const gallery = document.getElementById("gallery");
+            gallery.innerHTML = "";
+            
+            onValue(ref(database, 'items'), (snapshot) => {
+                const items = [];
+                snapshot.forEach((childSnapshot) => {
+                    items.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
+                });
+
+                const filteredItems = items.filter(item =>
+                    item.name.toLowerCase().includes(filter.toLowerCase())
+                );
+
+                filteredItems.forEach(item => {
+                    const itemDiv = document.createElement("div");
+                    itemDiv.className = "item";
+                    itemDiv.innerHTML = `
+                        <img src="${item.image}" alt="${item.name}">
+                        <h3>${item.name}</h3>
+                        <button onclick="deleteItem('${item.id}')">Entfernen</button>
+                    `;
+                    gallery.appendChild(itemDiv);
+                });
+            });
+        }
+
+        // Initial Gallery update
+        updateGallery();
+
+        // Search functionality
+        document.getElementById("searchInput").addEventListener("input", (e) => {
+            updateGallery(e.target.value);
+        });
+
+        // Make updateGallery global
+        window.updateGallery = updateGallery;
+    </script>
     <style>
         * {
             margin: 0;
@@ -227,84 +321,14 @@
     </div>
 
     <script>
-        const gallery = document.getElementById("gallery");
-        const searchInput = document.getElementById("searchInput");
-        const modal = document.getElementById("uploadModal");
-
-        // Lade gespeicherte Items beim Start
-        updateGallery();
-
-        // Suchfunktion
-        searchInput.addEventListener("input", (e) => {
-            updateGallery(e.target.value);
-        });
-
+        // Deine bisherigen Modal-Funktionen
         function openModal() {
-            modal.style.display = "block";
+            document.getElementById("uploadModal").style.display = "block";
         }
 
         function closeModal() {
-            modal.style.display = "none";
+            document.getElementById("uploadModal").style.display = "none";
             document.getElementById("imageInput").value = "";
-        }
-
-        function addItem() {
-            const imageFile = document.getElementById("imageInput").files[0];
-
-            if (!imageFile) {
-                alert("Bitte wähle ein Bild aus!");
-                return;
-            }
-
-            // Erstelle automatisch einen Namen mit Datum und Uhrzeit
-            const now = new Date();
-            const name = now.toLocaleString('de-DE');
-
-            // Konvertiere Bild zu Base64
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const newItem = {
-                    name: name,
-                    image: e.target.result
-                };
-
-                // Lade existierende Items
-                let items = JSON.parse(localStorage.getItem('lebensmittelListe') || '[]');
-                items.push(newItem);
-                
-                // Speichere aktualisierte Liste
-                localStorage.setItem('lebensmittelListe', JSON.stringify(items));
-                
-                closeModal();
-                updateGallery();
-            };
-            reader.readAsDataURL(imageFile);
-        }
-
-        function updateGallery(filter = "") {
-            gallery.innerHTML = "";
-            const items = JSON.parse(localStorage.getItem('lebensmittelListe') || '[]');
-            const filteredItems = items.filter(item =>
-                item.name.toLowerCase().includes(filter.toLowerCase())
-            );
-
-            filteredItems.forEach(item => {
-                const itemDiv = document.createElement("div");
-                itemDiv.className = "item";
-                itemDiv.innerHTML = `
-                    <img src="${item.image}" alt="${item.name}">
-                    <h3>${item.name}</h3>
-                    <button onclick="deleteItem('${item.name}')">Entfernen</button>
-                `;
-                gallery.appendChild(itemDiv);
-            });
-        }
-
-        function deleteItem(name) {
-            let items = JSON.parse(localStorage.getItem('lebensmittelListe') || '[]');
-            items = items.filter(item => item.name !== name);
-            localStorage.setItem('lebensmittelListe', JSON.stringify(items));
-            updateGallery(searchInput.value);
         }
 
         function takePicture() {
