@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hebers Lebensmittel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        #searchInput {
+            width: 90%;
+            max-width: 400px;
+            padding: 12px 20px;
+            margin: 15px auto;
+            display: block;
+            border: none;
+            border-radius: 25px;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-size: 16px;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1.5rem;
+            padding: 1.5rem;
+            margin-bottom: 80px;
+        }
+
+        .item {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .item:hover {
+            transform: translateY(-5px);
+        }
+
+        .item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .item h3 {
+            font-size: 16px;
+            margin: 10px 0;
+            color: #333;
+        }
+
+        .item button {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .item button:hover {
+            background: #ff6b81;
+        }
+
+        .add-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 30px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+
+        .add-button:hover {
+            transform: scale(1.1);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 20% auto;
+            padding: 25px;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .modal-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .modal-content input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        .modal-content button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .modal-content button:first-of-type {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .modal-content button:last-of-type {
+            background: #f1f1f1;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Hebers Lebensmittel ❤️</h1>
+    </div>
+
+    <input type="text" id="searchInput" placeholder="Suche...">
+    <div class="gallery" id="gallery"></div>
+    
+    <button class="add-button" onclick="openModal()">+</button>
+
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <h2>Neues Produkt hinzufügen</h2>
+            <input type="file" id="imageInput" accept="image/*" capture="camera"><br><br>
+            <input type="text" id="nameInput" placeholder="Produktname"><br><br>
+            <button onclick="addItem()">Hinzufügen</button>
+            <button onclick="closeModal()">Abbrechen</button>
+        </div>
+    </div>
+
+    <script>
+        const gallery = document.getElementById("gallery");
+        const searchInput = document.getElementById("searchInput");
+        const modal = document.getElementById("uploadModal");
+
+        // Lade gespeicherte Items beim Start
+        updateGallery();
+
+        // Suchfunktion
+        searchInput.addEventListener("input", (e) => {
+            updateGallery(e.target.value);
+        });
+
+        function openModal() {
+            modal.style.display = "block";
+        }
+
+        function closeModal() {
+            modal.style.display = "none";
+            document.getElementById("imageInput").value = "";
+            document.getElementById("nameInput").value = "";
+        }
+
+        function addItem() {
+            const imageFile = document.getElementById("imageInput").files[0];
+            const name = document.getElementById("nameInput").value;
+
+            if (!imageFile || !name) {
+                alert("Bitte fülle alle Felder aus!");
+                return;
+            }
+
+            // Konvertiere Bild zu Base64
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const newItem = {
+                    name: name,
+                    image: e.target.result
+                };
+
+                // Lade existierende Items
+                let items = JSON.parse(localStorage.getItem('lebensmittelListe') || '[]');
+                items.push(newItem);
+                
+                // Speichere aktualisierte Liste
+                localStorage.setItem('lebensmittelListe', JSON.stringify(items));
+                
+                closeModal();
+                updateGallery();
+            };
+            reader.readAsDataURL(imageFile);
+        }
+
+        function updateGallery(filter = "") {
+            gallery.innerHTML = "";
+            const items = JSON.parse(localStorage.getItem('lebensmittelListe') || '[]');
+            const filteredItems = items.filter(item =>
+                item.name.toLowerCase().includes(filter.toLowerCase())
+            );
+
+            filteredItems.forEach(item => {
+                const itemDiv = document.createElement("div");
+                itemDiv.className = "item";
+                itemDiv.innerHTML = `
+                    <img src="${item.image}" alt="${item.name}">
+                    <h3>${item.name}</h3>
+                    <button onclick="deleteItem('${item.name}')">Entfernen</button>
+                `;
+                gallery.appendChild(itemDiv);
+            });
+        }
+
+        function deleteItem(name) {
+            let items = JSON.parse(localStorage.getItem('lebensmittelListe') || '[]');
+            items = items.filter(item => item.name !== name);
+            localStorage.setItem('lebensmittelListe', JSON.stringify(items));
+            updateGallery(searchInput.value);
+        }
+    </script>
+</body>
+</html>
